@@ -81,60 +81,63 @@ class BudgetOverviewScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Pie Chart Card
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                children: [
-                  const Text("Monthly budget",
-                      style: TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 4),
-                  Text("\$${totalBudget.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
+            // Show Pie Chart only if categories are not empty
+            if (categories.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  children: [
+                    const Text("Monthly budget",
+                        style: TextStyle(color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    Text("\$${totalBudget.toStringAsFixed(2)}",
+                        style: const TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 20),
 
-                  PieChart(
-                    dataMap: dataMap,
-                    colorList: colorMap.values.toList(),
-                    chartRadius: 100,
-                    ringStrokeWidth: 20,
-                    chartType: ChartType.ring,
-                    centerText: "\$${totalSpent.toStringAsFixed(2)}\nSpent",
-                    centerTextStyle: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Colors.black),
-                    chartValuesOptions: const ChartValuesOptions(
-                        showChartValues: false),
-                    legendOptions: const LegendOptions(showLegends: false),
-                  ),
-                  const SizedBox(height: 10),
-                  Text("Left to spend: \$${leftToSpend.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                          color: Color(0xFF7B3EF2),
-                          fontWeight: FontWeight.w500)),
-                ],
+                    PieChart(
+                      dataMap: dataMap,
+                      colorList: colorMap.values.toList(),
+                      chartRadius: 100,
+                      ringStrokeWidth: 20,
+                      chartType: ChartType.ring,
+                      centerText: "\$${totalSpent.toStringAsFixed(2)}\nSpent",
+                      centerTextStyle: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Colors.black),
+                      chartValuesOptions: const ChartValuesOptions(
+                          showChartValues: false),
+                      legendOptions: const LegendOptions(showLegends: false),
+                    ),
+                    const SizedBox(height: 10),
+                    Text("Left to spend: \$${leftToSpend.toStringAsFixed(2)}",
+                        style: const TextStyle(
+                            color: Color(0xFF7B3EF2),
+                            fontWeight: FontWeight.w500)),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 30),
+            if (categories.isNotEmpty) const SizedBox(height: 30),
 
-            const Text("Budget category",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 20),
+            if (categories.isNotEmpty)
+              const Text("Budget category",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            if (categories.isNotEmpty) const SizedBox(height: 20),
 
             // Dynamic category tiles
-            ...categories.map((cat) => categoryTile(
-              cat.name,
-              "3 transactions", // You can customize this later
-              "${cat.amount} / \$1,000",
-              cat.icon,
-              cat.color,
-            )),
+            if (categories.isNotEmpty)
+              ...categories.map((cat) => categoryTile(
+                cat.name,
+                "3 transactions", // You can customize this later
+                "${cat.amount} / \$1,000",
+                cat.icon,
+                cat.color,
+              )),
           ],
         ),
       ),
