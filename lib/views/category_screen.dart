@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../budget_screen.dart';
 
-
 class CreateCategoryScreen extends StatefulWidget {
   const CreateCategoryScreen({super.key});
 

@@ -1,6 +1,6 @@
-import 'package:fintrackapp/views/budget_successfull_screen.dart';
 import 'package:fintrackapp/views/category_screen.dart';
 import 'package:flutter/material.dart';
+
 
 class BudgetCategory {
   final String name;
@@ -164,22 +164,17 @@ class _CreateBudgetScreenState extends State<CreateBudgetScreen> {
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                child: GestureDetector(
-                  onTap: () {
-              MaterialPageRoute(
-              builder: (context) => const BudgetScreen(),
-              );
-              },
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: Colors.deepPurple,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                    ),
-                    onPressed: () {  },
-                    child: const Text("Get Started",
-                        style: TextStyle(fontSize: 16, color: Colors.white)),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: Colors.deepPurple,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   ),
+                  onPressed: () {
+                    Navigator.pop(context, categories); // Return to Dashboard
+                  },
+                  child: const Text("Get Started",
+                      style: TextStyle(fontSize: 16, color: Colors.white)),
                 ),
               ),
             ],

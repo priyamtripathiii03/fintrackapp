@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../budget_screen.dart';
 import 'category_screen.dart' hide BudgetCategory;
 
-
 class DashboardScreen extends StatefulWidget {
   final List<BudgetCategory> initialCategories;
 
@@ -19,7 +18,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Copy initial categories so we can modify locally
     categories = List.from(widget.initialCategories);
   }
 
@@ -50,7 +48,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Row
                 Row(
                   children: [
                     const CircleAvatar(
@@ -61,10 +58,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
-                        Text('Namaste, Priyam',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                        Text('Shubh Prabhat',
-                            style: TextStyle(color: Colors.grey)),
+                        Text('Namaste, Priyam', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        Text('Shubh Prabhat', style: TextStyle(color: Colors.grey)),
                       ],
                     ),
                     const Spacer(),
@@ -81,8 +76,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ],
                 ),
                 const SizedBox(height: 20),
-
-                // Balance Card
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -92,11 +85,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text("Total balance",
-                          style: TextStyle(color: Colors.white54, fontSize: 14)),
+                      const Text("Total balance", style: TextStyle(color: Colors.white54, fontSize: 14)),
                       const SizedBox(height: 6),
-                      const Text("18,987.67 USD",
-                          style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+                      const Text("18,987.67 USD", style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -107,11 +98,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             onTap: () async {
                               final result = await Navigator.push<List<BudgetCategory>>(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (context) => const CreateBudgetScreen(),
-                                ),
+                                MaterialPageRoute(builder: (context) => const CreateBudgetScreen()),
                               );
-                              if (result != null && result.isNotEmpty) {
+                              if (result != null) {
                                 setState(() {
                                   categories = result;
                                 });
@@ -125,84 +114,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // Budget Card
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEDE6FE),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text("Set a financial budget",
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                            const SizedBox(height: 6),
-                            const Text(
-                              "Setting a budget helps you track your finance easier with fintrack",
-                              style: TextStyle(fontSize: 13, color: Colors.black54),
-                            ),
-                            const SizedBox(height: 10),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
-                              onPressed: () async {
-                                final result = await Navigator.push<List<BudgetCategory>>(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const CreateBudgetScreen(),
-                                  ),
-                                );
-                                if (result != null && result.isNotEmpty) {
-                                  setState(() {
-                                    categories = result;
-                                  });
-                                }
-                              },
-                              child: const Text("Set up now", style: TextStyle(color: Colors.white)),
-                            )
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Icon(Icons.account_balance_wallet, size: 48, color: Colors.deepPurple)
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Transactions Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text("Transactions", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                    Text("view all", style: TextStyle(color: Colors.deepPurple)),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Dynamic Transactions
-                if (categories.isEmpty) ...[
-                  const Text('No budget categories yet'),
-                ] else ...[
-                  for (var cat in categories)
-                    TransactionItem(
-                      title: cat.name,
-                      icon: cat.icon,
-                      amount: cat.amount,
-                      isCredit: true,
-                      iconColor: cat.color,
-                    ),
-                ],
-
-                // Sample static transactions
-                const TransactionItem(
-                    title: "Fitness first", icon: Icons.fitness_center, amount: "- \$50.00", isCredit: false),
-                const TransactionItem(
-                    title: "Transfer wise", icon: Icons.currency_exchange, amount: "\$50.00", isCredit: true),
+                const Text("Transactions", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                const SizedBox(height: 10),
+                if (categories.isEmpty)
+                  const Text('No budget categories yet')
+                else
+                  ...categories.map((cat) => TransactionItem(
+                    title: cat.name,
+                    icon: cat.icon,
+                    amount: cat.amount,
+                    isCredit: true,
+                    iconColor: cat.color,
+                  )),
               ],
             ),
           ),
@@ -261,9 +184,7 @@ class TransactionItem extends StatelessWidget {
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
         trailing: Text(
           amount,
-          style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: isCredit ? Colors.green : Colors.red),
+          style: TextStyle(fontWeight: FontWeight.bold, color: isCredit ? Colors.green : Colors.red),
         ),
       ),
     );
