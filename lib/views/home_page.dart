@@ -1,18 +1,40 @@
 import 'package:flutter/material.dart';
-
 import '../budget_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+
+class DashboardScreen extends StatefulWidget {
+  final List<BudgetCategory> initialCategories;
+
+  const DashboardScreen({super.key, required this.initialCategories});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  late List<BudgetCategory> categories;
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Copy initial categories so we can modify locally
+    categories = List.from(widget.initialCategories);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
+        currentIndex: _currentIndex,
         selectedItemColor: Colors.deepPurple,
         unselectedItemColor: Colors.grey,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.credit_card), label: 'Cards'),
@@ -27,7 +49,7 @@ class DashboardScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// Greeting Header
+                // Header Row
                 Row(
                   children: [
                     const CircleAvatar(
@@ -59,7 +81,7 @@ class DashboardScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                /// Balance Card
+                // Balance Card
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -81,13 +103,21 @@ class DashboardScreen extends StatelessWidget {
                           const BlackButton(icon: Icons.add, label: "Deposit"),
                           const BlackButton(icon: Icons.send, label: "Transfer"),
                           GestureDetector(
-                            onTap: (){
-                              Navigator.push(
+                            onTap: () async {
+                              final result = await Navigator.push<List<BudgetCategory>>(
                                 context,
-                                MaterialPageRoute(builder: (context) => const CreateBudgetScreen()),
+                                MaterialPageRoute(
+                                  builder: (context) => const CreateBudgetScreen(),
+                                ),
                               );
+                              if (result != null && result.isNotEmpty) {
+                                setState(() {
+                                  categories = result;
+                                });
+                              }
                             },
-                              child: const BlackButton(icon: Icons.more_horiz, label: "More")),
+                            child: const BlackButton(icon: Icons.more_horiz, label: "More"),
+                          ),
                         ],
                       )
                     ],
@@ -95,11 +125,11 @@ class DashboardScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                /// Budget Card
+                // Budget Card
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Color(0xFFEDE6FE),
+                    color: const Color(0xFFEDE6FE),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -118,8 +148,20 @@ class DashboardScreen extends StatelessWidget {
                             const SizedBox(height: 10),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
-                              onPressed: () {},
-                              child: const Text("Set up now",style: TextStyle(color: Colors.white),),
+                              onPressed: () async {
+                                final result = await Navigator.push<List<BudgetCategory>>(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const CreateBudgetScreen(),
+                                  ),
+                                );
+                                if (result != null && result.isNotEmpty) {
+                                  setState(() {
+                                    categories = result;
+                                  });
+                                }
+                              },
+                              child: const Text("Set up now", style: TextStyle(color: Colors.white)),
                             )
                           ],
                         ),
@@ -131,7 +173,7 @@ class DashboardScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                /// Transactions
+                // Transactions Header
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: const [
@@ -140,6 +182,22 @@ class DashboardScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
+
+                // Dynamic Transactions
+                if (categories.isEmpty) ...[
+                  const Text('No budget categories yet'),
+                ] else ...[
+                  for (var cat in categories)
+                    TransactionItem(
+                      title: cat.name,
+                      icon: cat.icon,
+                      amount: cat.amount,
+                      isCredit: true,
+                      iconColor: cat.color,
+                    ),
+                ],
+
+                // Sample static transactions
                 const TransactionItem(
                     title: "Fitness first", icon: Icons.fitness_center, amount: "- \$50.00", isCredit: false),
                 const TransactionItem(
@@ -179,6 +237,7 @@ class TransactionItem extends StatelessWidget {
   final IconData icon;
   final String amount;
   final bool isCredit;
+  final Color? iconColor;
 
   const TransactionItem({
     super.key,
@@ -186,6 +245,7 @@ class TransactionItem extends StatelessWidget {
     required this.icon,
     required this.amount,
     required this.isCredit,
+    this.iconColor,
   });
 
   @override
@@ -195,7 +255,7 @@ class TransactionItem extends StatelessWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: Colors.grey.shade200,
-          child: Icon(icon, color: isCredit ? Colors.green : Colors.red),
+          child: Icon(icon, color: iconColor ?? (isCredit ? Colors.green : Colors.red)),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
         trailing: Text(

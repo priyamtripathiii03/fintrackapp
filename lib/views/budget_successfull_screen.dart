@@ -1,3 +1,4 @@
+import 'package:fintrackapp/views/home_page.dart';
 import 'package:flutter/material.dart';
 
 class BudgetScreen extends StatelessWidget {
@@ -58,7 +59,12 @@ class BudgetScreen extends StatelessWidget {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => DashboardScreen(initialCategories: [],)),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF7B3EF2),
                     shape: RoundedRectangleBorder(
@@ -66,9 +72,17 @@ class BudgetScreen extends StatelessWidget {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text(
-                    "View my dashboard",
-                    style: TextStyle(fontSize: 16,color: Colors.white),
+                  child: GestureDetector(
+                    onTap: (){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const DashboardScreen(initialCategories: [],)),
+                      );
+                    },
+                    child: const Text(
+                      "View my dashboard",
+                      style: TextStyle(fontSize: 16,color: Colors.white),
+                    ),
                   ),
                 ),
               ),

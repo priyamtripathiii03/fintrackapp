@@ -1,6 +1,18 @@
-import 'package:fintrackapp/views/category_screen.dart';
 import 'package:flutter/material.dart';
- // Ensure this contains BudgetCategory model
+
+class BudgetCategory {
+  final String name;
+  final IconData icon;
+  final Color color;
+  final String amount;
+
+  BudgetCategory({
+    required this.name,
+    required this.icon,
+    required this.color,
+    required this.amount,
+  });
+}
 
 class CreateBudgetScreen extends StatefulWidget {
   const CreateBudgetScreen({super.key});
@@ -10,14 +22,20 @@ class CreateBudgetScreen extends StatefulWidget {
 }
 
 class _CreateBudgetScreenState extends State<CreateBudgetScreen> {
-  final List<BudgetCategory> categories = [
+  List<BudgetCategory> categories = [
     BudgetCategory(icon: Icons.circle, color: Colors.purple, name: "General", amount: "\$1,000"),
     BudgetCategory(icon: Icons.directions_bus, color: Colors.blue, name: "Transportation", amount: "\$1,000"),
     BudgetCategory(icon: Icons.favorite, color: Colors.pink, name: "Charity", amount: "\$1,000"),
   ];
 
   final List<String> predefinedAmounts = ["100", "200", "500", "1,000"];
-  String selectedAmount = "100"; // Default selected amount
+  String selectedAmount = "100";
+
+  @override
+  void dispose() {
+    // Dispose any controllers if added later (currently none)
+    super.dispose();
+  }
 
   void _addNewCategory() async {
     final newCategory = await Navigator.push<BudgetCategory>(
@@ -27,16 +45,37 @@ class _CreateBudgetScreenState extends State<CreateBudgetScreen> {
 
     if (newCategory != null) {
       setState(() {
-        // Set selected amount to new category
-        final categoryWithAmount = BudgetCategory(
+        categories.add(BudgetCategory(
           name: newCategory.name,
           icon: newCategory.icon,
           color: newCategory.color,
           amount: "\$$selectedAmount",
-        );
-        categories.add(categoryWithAmount);
+        ));
       });
     }
+  }
+
+  void _editCategory(int index) async {
+    final edited = await showDialog<BudgetCategory>(
+      context: context,
+      builder: (context) => EditCategoryDialog(category: categories[index]),
+    );
+
+    if (edited != null) {
+      setState(() {
+        categories[index] = edited;
+      });
+    }
+  }
+
+  void _deleteCategory(int index) {
+    setState(() {
+      categories.removeAt(index);
+    });
+  }
+
+  void _submitBudget() {
+    Navigator.pop(context, categories);
   }
 
   @override
@@ -49,21 +88,23 @@ class _CreateBudgetScreenState extends State<CreateBudgetScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top Bar
+              // Back & Title
               Row(
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () => Navigator.pop(context, categories),
                     child: const Icon(Icons.arrow_back_ios, size: 20),
                   ),
                   const SizedBox(width: 10),
-                  const Text("Create Budget",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "Create Budget",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
 
-              // Budget Card
+              // Budget amount selector
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -75,10 +116,8 @@ class _CreateBudgetScreenState extends State<CreateBudgetScreen> {
                 ),
                 child: Column(
                   children: [
-                    Text(
-                      '\$${selectedAmount}',
-                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                    ),
+                    Text('\$$selectedAmount',
+                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     const Text("Set budget amount", style: TextStyle(color: Colors.grey)),
                     const SizedBox(height: 16),
@@ -91,9 +130,7 @@ class _CreateBudgetScreenState extends State<CreateBudgetScreen> {
                           selected: isSelected,
                           selectedColor: Colors.deepPurple,
                           backgroundColor: const Color(0xFFF0F0F0),
-                          labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black,
-                          ),
+                          labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
                           onSelected: (_) {
                             setState(() {
                               selectedAmount = amount;
@@ -107,71 +144,58 @@ class _CreateBudgetScreenState extends State<CreateBudgetScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Set Category Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text("Set Budget category",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  Row(
-                    children: [
-                      Text("Edit", style: TextStyle(color: Colors.deepPurple)),
-                      SizedBox(width: 4),
-                      Icon(Icons.edit, size: 16, color: Colors.deepPurple),
-                    ],
-                  )
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Category List
+              // Categories list with add button
               Expanded(
-                child: ListView(
-                  children: [
-                    for (var cat in categories)
-                      CategoryTile(
-                        icon: cat.icon,
-                        color: cat.color,
-                        title: cat.name,
-                        amount: cat.amount,
+                child: ListView.separated(
+                  itemCount: categories.length + 1,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    if (index == categories.length) {
+                      return ElevatedButton.icon(
+                        icon: const Icon(Icons.add),
+                        label: const Text("Add Category"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple,
+                        ),
+                        onPressed: _addNewCategory,
+                      );
+                    }
+
+                    final cat = categories[index];
+                    return Card(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: ListTile(
+                        leading: CircleAvatar(backgroundColor: cat.color, child: Icon(cat.icon, color: Colors.white)),
+                        title: Text(cat.name),
+                        subtitle: Text(cat.amount),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.grey),
+                              onPressed: () => _editCategory(index),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _deleteCategory(index),
+                            ),
+                          ],
+                        ),
                       ),
-                    AddCategoryTile(onTap: _addNewCategory),
-                  ],
-                ),
-              ),
-
-              // Amount Left
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: const [
-                      BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))
-                    ],
-                  ),
-                  child: const Text("Amount left: \$3,000",
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Get Started Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.deepPurple,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                  ),
-                  onPressed: () {
-                    // Get started logic
+                    );
                   },
-                  child: const Text("Get Started", style: TextStyle(fontSize: 16, color: Colors.white)),
                 ),
               ),
+
+              // Submit Button
+              ElevatedButton(
+                onPressed: _submitBudget,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  minimumSize: const Size.fromHeight(48),
+                ),
+                child: const Text("Submit Budget", style: TextStyle(color: Colors.white, fontSize: 16)),
+              )
             ],
           ),
         ),
@@ -180,72 +204,117 @@ class _CreateBudgetScreenState extends State<CreateBudgetScreen> {
   }
 }
 
-class CategoryTile extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String title;
-  final String amount;
+// Screen to create a new category
+class CreateCategoryScreen extends StatefulWidget {
+  const CreateCategoryScreen({super.key});
 
-  const CategoryTile({
-    super.key,
-    required this.icon,
-    required this.color,
-    required this.title,
-    required this.amount,
-  });
+  @override
+  State<CreateCategoryScreen> createState() => _CreateCategoryScreenState();
+}
+
+class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
+  final _nameController = TextEditingController();
+  IconData selectedIcon = Icons.category;
+  Color selectedColor = Colors.deepPurple;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 5, offset: Offset(0, 2))
-        ],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: color.withOpacity(0.2),
-            child: Icon(icon, color: color),
-          ),
-          const SizedBox(width: 16),
-          Expanded(child: Text(title, style: const TextStyle(fontSize: 16))),
-          Text(amount, style: const TextStyle(fontWeight: FontWeight.bold)),
-        ],
+    return Scaffold(
+      appBar: AppBar(title: const Text("Add Category")),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(labelText: "Category Name"),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                final name = _nameController.text.trim();
+                if (name.isEmpty) return;
+                Navigator.pop(
+                  context,
+                  BudgetCategory(
+                    name: name,
+                    icon: selectedIcon,
+                    color: selectedColor,
+                    amount: "\$100", // default amount for new category
+                  ),
+                );
+              },
+              child: const Text("Add"),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class AddCategoryTile extends StatelessWidget {
-  final VoidCallback onTap;
+// Dialog to edit category
+class EditCategoryDialog extends StatefulWidget {
+  final BudgetCategory category;
 
-  const AddCategoryTile({super.key, required this.onTap});
+  const EditCategoryDialog({super.key, required this.category});
+
+  @override
+  State<EditCategoryDialog> createState() => _EditCategoryDialogState();
+}
+
+class _EditCategoryDialogState extends State<EditCategoryDialog> {
+  late TextEditingController _nameController;
+  late IconData _icon;
+  late Color _color;
+  late String _amount;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.category.name);
+    _icon = widget.category.icon;
+    _color = widget.category.color;
+    _amount = widget.category.amount;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: Row(
-          children: const [
-            Icon(Icons.add, color: Colors.grey),
-            SizedBox(width: 16),
-            Text("Add new category", style: TextStyle(color: Colors.grey, fontSize: 16)),
-          ],
-        ),
+    return AlertDialog(
+      title: const Text("Edit Category"),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(controller: _nameController, decoration: const InputDecoration(labelText: "Name")),
+          // You can add editing for icon, color, and amount here if needed
+        ],
       ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+        ElevatedButton(
+          onPressed: () {
+            final name = _nameController.text.trim();
+            if (name.isEmpty) return;
+            Navigator.pop(
+              context,
+              BudgetCategory(name: name, icon: _icon, color: _color, amount: _amount),
+            );
+          },
+          child: const Text("Save"),
+        )
+      ],
     );
   }
 }

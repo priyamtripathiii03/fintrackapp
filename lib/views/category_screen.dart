@@ -1,6 +1,4 @@
-import 'package:fintrackapp/views/budget_successfull_screen.dart';
 import 'package:flutter/material.dart';
-
 
 class BudgetCategory {
   final String name;
@@ -118,7 +116,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                     ),
                   ),
                   onChanged: (_) {
-                    setState(() {}); // icon update ke liye
+                    setState(() {}); // Update icon on typing
                   },
                 ),
                 const SizedBox(height: 20),
@@ -172,10 +170,21 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                       ),
                     ),
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => BudgetScreen()),
+                      if (_controller.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Please enter a category name")),
+                        );
+                        return;
+                      }
+
+                      final newCategory = BudgetCategory(
+                        name: _controller.text.trim(),
+                        icon: getIconForCategory(_controller.text),
+                        color: colorOptions[selectedColorIndex],
+                        amount: "", // Budget amount will be set later
                       );
+
+                      Navigator.pop(context, newCategory);
                     },
                     child: const Text(
                       "Save category",
