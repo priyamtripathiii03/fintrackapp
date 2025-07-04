@@ -1,24 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
+import '../budget_screen.dart';
 
 class BudgetOverviewScreen extends StatelessWidget {
-  const BudgetOverviewScreen({super.key});
+  final List<BudgetCategory> categories;
+
+  const BudgetOverviewScreen({super.key, required this.categories});
 
   @override
   Widget build(BuildContext context) {
-    Map<String, double> dataMap = {
-      "General": 600,
-      "Transportation": 600,
-      "Charity": 1210,
-      "Education": 925,
+    // Convert categories to a dataMap for PieChart
+    final Map<String, double> dataMap = {
+      for (var cat in categories) cat.name: _parseAmount(cat.amount),
     };
 
-    Map<String, Color> colorMap = {
-      "General": Colors.purple,
-      "Transportation": Colors.blue,
-      "Charity": Colors.pink,
-      "Education": Colors.orange,
+    // Generate colorMap
+    final Map<String, Color> colorMap = {
+      for (var cat in categories) cat.name: cat.color,
     };
+
+    final double totalBudget = categories.fold(
+      0,
+          (prev, cat) => prev + _parseAmount(cat.amount),
+    );
+
+    final double totalSpent = dataMap.values.fold(0, (sum, item) => sum + item);
+    final double leftToSpend = totalBudget - totalSpent;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -26,15 +33,27 @@ class BudgetOverviewScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            // Top Bar
+            // 🔽 Top Bar with Close Icon
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text("Spending insight",
-                    style:
-                    TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              children: [
+                // Close Icon
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    Navigator.pop(context); // Go back to previous screen
+                  },
+                ),
+
+                // Title and Month
+                const Spacer(),
+                const Text(
+                  "Spending insight",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const Spacer(flex: 2),
                 Row(
-                  children: [
+                  children: const [
                     Text("Jan", style: TextStyle(fontWeight: FontWeight.bold)),
                     Icon(Icons.keyboard_arrow_down),
                   ],
@@ -48,14 +67,12 @@ class BudgetOverviewScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text("Budget overview",
-                    style:
-                    TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                 Row(
                   children: const [
                     Text("Adjust",
                         style: TextStyle(
-                            color: Color(0xFF7B3EF2),
-                            fontWeight: FontWeight.w500)),
+                            color: Color(0xFF7B3EF2), fontWeight: FontWeight.w500)),
                     SizedBox(width: 4),
                     Icon(Icons.edit, size: 18, color: Color(0xFF7B3EF2)),
                   ],
@@ -76,29 +93,29 @@ class BudgetOverviewScreen extends StatelessWidget {
                   const Text("Monthly budget",
                       style: TextStyle(color: Colors.grey)),
                   const SizedBox(height: 4),
-                  const Text("\$6,000",
-                      style:
-                      TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text("\$${totalBudget.toStringAsFixed(2)}",
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 20),
 
-                  // Pie Chart
                   PieChart(
                     dataMap: dataMap,
                     colorList: colorMap.values.toList(),
                     chartRadius: 100,
                     ringStrokeWidth: 20,
                     chartType: ChartType.ring,
-                    centerText: "\$2,335.20\nSpent",
+                    centerText: "\$${totalSpent.toStringAsFixed(2)}\nSpent",
                     centerTextStyle: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 14,color: Colors.black),
-                    chartValuesOptions:
-                    const ChartValuesOptions(showChartValues: false),
-                    legendOptions:
-                    const LegendOptions(showLegends: false), // hidden
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: Colors.black),
+                    chartValuesOptions: const ChartValuesOptions(
+                        showChartValues: false),
+                    legendOptions: const LegendOptions(showLegends: false),
                   ),
                   const SizedBox(height: 10),
-                  const Text("Left to spend: \$3,665.80",
-                      style: TextStyle(
+                  Text("Left to spend: \$${leftToSpend.toStringAsFixed(2)}",
+                      style: const TextStyle(
                           color: Color(0xFF7B3EF2),
                           fontWeight: FontWeight.w500)),
                 ],
@@ -110,15 +127,14 @@ class BudgetOverviewScreen extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 20),
 
-            // Category List
-            categoryTile("General", "3 transactions", "\$600 / \$3,000",
-                Icons.category, Colors.purple),
-            categoryTile("Transportation", "5 transactions", "\$600 / \$1,000",
-                Icons.directions_car, Colors.blue),
-            categoryTile("Charity", "12 transactions", "\$1,210 / \$1,000",
-                Icons.favorite, Colors.pink),
-            categoryTile("Education", "6 transactions", "\$925 / \$1,000",
-                Icons.school, Colors.orange),
+            // Dynamic category tiles
+            ...categories.map((cat) => categoryTile(
+              cat.name,
+              "3 transactions", // You can customize this later
+              "${cat.amount} / \$1,000",
+              cat.icon,
+              cat.color,
+            )),
           ],
         ),
       ),
@@ -146,8 +162,8 @@ class BudgetOverviewScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style:
-                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 14)),
                 const SizedBox(height: 4),
                 Text(subtitle,
                     style: const TextStyle(color: Colors.grey, fontSize: 12)),
@@ -155,9 +171,14 @@ class BudgetOverviewScreen extends StatelessWidget {
             ),
           ),
           Text(amount,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, fontSize: 14)),
         ],
       ),
     );
+  }
+
+  double _parseAmount(String amount) {
+    return double.tryParse(amount.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
   }
 }

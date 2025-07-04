@@ -26,6 +26,7 @@ class MyApp extends StatelessWidget {
         '/newcategory': (context) => const CreateCategoryScreen(),
         '/budgetsuccessfull': (context) => const BudgetScreen(),
         '/createbudget': (context) => const CreateBudgetScreen(),
+        '/budgetoverview': (context) => BudgetOverviewScreen(categories: [],),
 
       },
     );

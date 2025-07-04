@@ -1,3 +1,4 @@
+import 'package:fintrackapp/views/budget_over_view_screen.dart';
 import 'package:flutter/material.dart';
 import '../budget_screen.dart';
 import 'category_screen.dart' hide BudgetCategory;
@@ -64,9 +65,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const Spacer(),
                     Stack(
-                      children: const [
-                        Icon(Icons.notifications_none),
-                        Positioned(
+                      children: [
+                        GestureDetector(
+                          onTap: (){
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => BudgetOverviewScreen(categories: categories),));
+                          },
+                            child: const Icon(Icons.notifications_none)),
+                        const Positioned(
                           right: 0,
                           top: 0,
                           child: CircleAvatar(radius: 4, backgroundColor: Colors.red),
