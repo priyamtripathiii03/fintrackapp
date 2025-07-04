@@ -1,18 +1,6 @@
 import 'package:flutter/material.dart';
+import '../budget_screen.dart';
 
-class BudgetCategory {
-  final String name;
-  final IconData icon;
-  final Color color;
-  final String amount;
-
-  BudgetCategory({
-    required this.name,
-    required this.icon,
-    required this.color,
-    required this.amount,
-  });
-}
 
 class CreateCategoryScreen extends StatefulWidget {
   const CreateCategoryScreen({super.key});
@@ -181,7 +169,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                         name: _controller.text.trim(),
                         icon: getIconForCategory(_controller.text),
                         color: colorOptions[selectedColorIndex],
-                        amount: "", // Budget amount will be set later
+                        amount: "",
                       );
 
                       Navigator.pop(context, newCategory);

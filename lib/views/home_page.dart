@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../budget_screen.dart';
+import 'category_screen.dart' hide BudgetCategory;
 
 
 class DashboardScreen extends StatefulWidget {
