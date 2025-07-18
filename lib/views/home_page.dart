@@ -1,7 +1,7 @@
 import 'package:fintrackapp/views/budget_over_view_screen.dart';
 import 'package:flutter/material.dart';
 import '../budget_screen.dart';
-import 'category_screen.dart' hide BudgetCategory;
+import 'category_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final List<BudgetCategory> initialCategories;
@@ -26,20 +26,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        selectedItemColor: Colors.deepPurple,
-        unselectedItemColor: Colors.grey,
-        onTap: (index) {
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        backgroundColor: Colors.teal.shade50,
+        onDestinationSelected: (index) {
           setState(() {
             _currentIndex = index;
           });
         },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.credit_card), label: 'Cards'),
-          BottomNavigationBarItem(icon: Icon(Icons.card_giftcard), label: 'Rewards'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        indicatorColor: Colors.teal.shade200,
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.credit_card_outlined),
+            selectedIcon: Icon(Icons.credit_card),
+            label: 'Cards',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.card_giftcard_outlined),
+            selectedIcon: Icon(Icons.card_giftcard),
+            label: 'Rewards',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
         ],
       ),
       body: SafeArea(
@@ -67,10 +83,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Stack(
                       children: [
                         GestureDetector(
-                          onTap: (){
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => BudgetOverviewScreen(categories: categories),));
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => BudgetOverviewScreen(categories: categories),
+                              ),
+                            );
                           },
-                            child: const Icon(Icons.notifications_none)),
+                          child: const Icon(Icons.notifications_none),
+                        ),
                         const Positioned(
                           right: 0,
                           top: 0,
