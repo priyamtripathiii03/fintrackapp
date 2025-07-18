@@ -2,24 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
 import '../budget_screen.dart';
 
-class BudgetOverviewScreen extends StatelessWidget {
+class BudgetOverviewScreen extends StatefulWidget {
   final List<BudgetCategory> categories;
 
   const BudgetOverviewScreen({super.key, required this.categories});
 
   @override
+  State<BudgetOverviewScreen> createState() => _BudgetOverviewScreenState();
+}
+
+class _BudgetOverviewScreenState extends State<BudgetOverviewScreen> {
+  late List<BudgetCategory> _editableCategories;
+
+  @override
+  void initState() {
+    super.initState();
+    _editableCategories = widget.categories
+        .map((cat) => BudgetCategory(
+      name: cat.name,
+      amount: cat.amount,
+      icon: cat.icon,
+      color: cat.color,
+    ))
+        .toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Convert categories to a dataMap for PieChart
     final Map<String, double> dataMap = {
-      for (var cat in categories) cat.name: _parseAmount(cat.amount),
+      for (var cat in _editableCategories) cat.name: _parseAmount(cat.amount),
     };
 
-    // Generate colorMap
     final Map<String, Color> colorMap = {
-      for (var cat in categories) cat.name: cat.color,
+      for (var cat in _editableCategories) cat.name: cat.color,
     };
 
-    final double totalBudget = categories.fold(
+    final double totalBudget = _editableCategories.fold(
       0,
           (prev, cat) => prev + _parseAmount(cat.amount),
     );
@@ -37,15 +55,10 @@ class BudgetOverviewScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Close Icon
                 IconButton(
                   icon: const Icon(Icons.close),
-                  onPressed: () {
-                    Navigator.pop(context); // Go back to previous screen
-                  },
+                  onPressed: () => Navigator.pop(context),
                 ),
-
-                // Title and Month
                 const Spacer(),
                 const Text(
                   "Spending insight",
@@ -68,21 +81,23 @@ class BudgetOverviewScreen extends StatelessWidget {
               children: [
                 const Text("Budget overview",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                Row(
-                  children: const [
-                    Text("Adjust",
-                        style: TextStyle(
-                            color: Color(0xFF7B3EF2), fontWeight: FontWeight.w500)),
-                    SizedBox(width: 4),
-                    Icon(Icons.edit, size: 18, color: Color(0xFF7B3EF2)),
-                  ],
+                GestureDetector(
+                  onTap: () => _showAdjustBottomSheet(context),
+                  child: Row(
+                    children: const [
+                      Text("Adjust",
+                          style: TextStyle(
+                              color: Color(0xFF7B3EF2), fontWeight: FontWeight.w500)),
+                      SizedBox(width: 4),
+                      Icon(Icons.edit, size: 18, color: Color(0xFF7B3EF2)),
+                    ],
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 20),
 
-            // Show Pie Chart only if categories are not empty
-            if (categories.isNotEmpty)
+            if (_editableCategories.isNotEmpty)
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -91,14 +106,12 @@ class BudgetOverviewScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    const Text("Monthly budget",
-                        style: TextStyle(color: Colors.grey)),
+                    const Text("Monthly budget", style: TextStyle(color: Colors.grey)),
                     const SizedBox(height: 4),
                     Text("\$${totalBudget.toStringAsFixed(2)}",
                         style: const TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 20),
-
                     PieChart(
                       dataMap: dataMap,
                       colorList: colorMap.values.toList(),
@@ -110,8 +123,8 @@ class BudgetOverviewScreen extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                           color: Colors.black),
-                      chartValuesOptions: const ChartValuesOptions(
-                          showChartValues: false),
+                      chartValuesOptions:
+                      const ChartValuesOptions(showChartValues: false),
                       legendOptions: const LegendOptions(showLegends: false),
                     ),
                     const SizedBox(height: 10),
@@ -122,18 +135,17 @@ class BudgetOverviewScreen extends StatelessWidget {
                   ],
                 ),
               ),
-            if (categories.isNotEmpty) const SizedBox(height: 30),
+            if (_editableCategories.isNotEmpty) const SizedBox(height: 30),
 
-            if (categories.isNotEmpty)
+            if (_editableCategories.isNotEmpty)
               const Text("Budget category",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            if (categories.isNotEmpty) const SizedBox(height: 20),
+            if (_editableCategories.isNotEmpty) const SizedBox(height: 20),
 
-            // Dynamic category tiles
-            if (categories.isNotEmpty)
-              ...categories.map((cat) => categoryTile(
+            if (_editableCategories.isNotEmpty)
+              ..._editableCategories.map((cat) => categoryTile(
                 cat.name,
-                "3 transactions", // You can customize this later
+                "3 transactions",
                 "${cat.amount} / \$1,000",
                 cat.icon,
                 cat.color,
@@ -183,5 +195,66 @@ class BudgetOverviewScreen extends StatelessWidget {
 
   double _parseAmount(String amount) {
     return double.tryParse(amount.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
+  }
+
+  void _showAdjustBottomSheet(BuildContext context) {
+    final List<TextEditingController> controllers = _editableCategories
+        .map((cat) => TextEditingController(text: _parseAmount(cat.amount).toString()))
+        .toList();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+              left: 20,
+              right: 20,
+              top: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Adjust Budgets",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              const SizedBox(height: 20),
+              ..._editableCategories.asMap().entries.map((entry) {
+                int i = entry.key;
+                BudgetCategory cat = entry.value;
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: TextField(
+                    controller: controllers[i],
+                    keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: "${cat.name} Budget",
+                      prefixIcon: Icon(cat.icon, color: cat.color),
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                );
+              }),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF7B3EF2)),
+                onPressed: () {
+                  setState(() {
+                    for (int i = 0; i < _editableCategories.length; i++) {
+                      _editableCategories[i].amount =
+                          controllers[i].text.trim();
+                    }
+                  });
+                  Navigator.pop(context);
+                },
+                child: const Text("Save Changes",style: TextStyle(color: Colors.white),),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
