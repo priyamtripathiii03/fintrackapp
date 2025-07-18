@@ -16,6 +16,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late List<BudgetCategory> categories;
   int _currentIndex = 0;
 
+  // New state variables
+  double spendingLimit = 1000;
+  double totalSpent = 1250;
+
   @override
   void initState() {
     super.initState();
@@ -24,6 +28,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    double overLimit = totalSpent - spendingLimit;
+    bool isLimitExceeded = overLimit > 0;
+    double progress = (totalSpent / spendingLimit).clamp(0.0, 1.0);
+
     return Scaffold(
       backgroundColor: Colors.white,
       bottomNavigationBar: NavigationBar(
@@ -141,6 +149,98 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                // 🔥 Spending Breakdown Section (with working Adjust)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Spending Breakdown", style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            final TextEditingController controller = TextEditingController(
+                              text: spendingLimit.toStringAsFixed(0),
+                            );
+                            return AlertDialog(
+                              title: const Text("Adjust Spending Limit"),
+                              content: TextField(
+                                controller: controller,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(labelText: "New Limit (\$)"),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text("Cancel"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    final newLimit = double.tryParse(controller.text);
+                                    if (newLimit != null && newLimit > 0) {
+                                      setState(() {
+                                        spendingLimit = newLimit;
+                                      });
+                                      Navigator.of(context).pop();
+                                    }
+                                  },
+                                  child: const Text("Save"),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      child: const Text("Adjust"),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (isLimitExceeded)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '\$${overLimit.toStringAsFixed(2)} over',
+                              style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+                            ),
+                            const Row(
+                              children: [
+                                Icon(Icons.error_outline, color: Colors.orange, size: 18),
+                                SizedBox(width: 4),
+                                Text('Limit exceeded', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ],
+                        ),
+                      const SizedBox(height: 10),
+                      LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 8,
+                        backgroundColor: Colors.grey.shade300,
+                        color: Colors.orange,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '\$${totalSpent.toStringAsFixed(0)} of \$${spendingLimit.toStringAsFixed(0)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
                 const Text("Transactions", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                 const SizedBox(height: 10),
                 if (categories.isEmpty)
